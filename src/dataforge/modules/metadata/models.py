@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from sqlalchemy import (
     BigInteger,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -106,3 +107,25 @@ class IncidentRow(Base):
     )
 
     __table_args__ = (Index("ix_incidents_run_anomaly", "run_id", "anomaly_type", unique=True),)
+
+
+class RootCauseAnalysisRow(Base):
+    __tablename__ = "root_cause_analyses"
+
+    analysis_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        ForeignKey("pipeline_runs.run_id", ondelete="CASCADE"),
+        index=True,
+        unique=True,
+    )
+    category: Mapped[str] = mapped_column(String(64), index=True)
+    summary: Mapped[str] = mapped_column(Text, default="")
+    explanation: Mapped[str] = mapped_column(Text, default="")
+    contributing_factors_json: Mapped[str] = mapped_column(Text, default="[]")
+    recommended_actions_json: Mapped[str] = mapped_column(Text, default="[]")
+    incident_ids_json: Mapped[str] = mapped_column(Text, default="[]")
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    analyzer: Mapped[str] = mapped_column(String(64), default="rule-based-v1")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
