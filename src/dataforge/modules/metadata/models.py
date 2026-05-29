@@ -7,7 +7,7 @@ storage schema stays an internal detail of this module.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     BigInteger,
@@ -55,7 +55,7 @@ class PipelineRunRow(Base):
     failure_task_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     ingested_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now()  # noqa: DTZ005
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     stages: Mapped[list[StageMetricsRow]] = relationship(
@@ -85,3 +85,24 @@ class StageMetricsRow(Base):
     failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     run: Mapped[PipelineRunRow] = relationship(back_populates="stages")
+
+
+class IncidentRow(Base):
+    __tablename__ = "incidents"
+
+    incident_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        ForeignKey("pipeline_runs.run_id", ondelete="CASCADE"), index=True
+    )
+    anomaly_type: Mapped[str] = mapped_column(String(64), index=True)
+    severity: Mapped[int] = mapped_column(Integer, index=True)
+    status: Mapped[str] = mapped_column(String(32), default="open", index=True)
+    title: Mapped[str] = mapped_column(String(512), default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    # Signals serialized as JSON; small and read whole, so no separate table.
+    signals_json: Mapped[str] = mapped_column(Text, default="[]")
+    detected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (Index("ix_incidents_run_anomaly", "run_id", "anomaly_type", unique=True),)
