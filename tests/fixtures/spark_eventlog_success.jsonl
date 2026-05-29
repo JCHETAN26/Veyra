@@ -1,0 +1,9 @@
+{"Event":"SparkListenerApplicationStart","App Name":"nyc_taxi_etl","App ID":"app-20260529-0001","Timestamp":1717000000000,"User":"dataforge"}
+{"Event":"SparkListenerJobStart","Job ID":0,"Submission Time":1717000001000}
+{"Event":"SparkListenerStageCompleted","Stage Info":{"Stage ID":0,"Stage Attempt ID":0,"Stage Name":"read parquet","Number of Tasks":4,"Submission Time":1717000001000,"Completion Time":1717000004000}}
+{"Event":"SparkListenerTaskEnd","Stage ID":0,"Stage Attempt ID":0,"Task Type":"ShuffleMapTask","Task End Reason":{"Reason":"Success"},"Task Info":{"Task ID":0},"Task Metrics":{"Executor Run Time":2500,"Memory Bytes Spilled":0,"Disk Bytes Spilled":0,"Shuffle Read Metrics":{"Remote Bytes Read":1048576,"Local Bytes Read":524288},"Shuffle Write Metrics":{"Shuffle Bytes Written":2097152}}}
+{"Event":"SparkListenerTaskEnd","Stage ID":0,"Stage Attempt ID":0,"Task Type":"ShuffleMapTask","Task End Reason":{"Reason":"Success"},"Task Info":{"Task ID":1},"Task Metrics":{"Executor Run Time":2600,"Memory Bytes Spilled":0,"Disk Bytes Spilled":0,"Shuffle Read Metrics":{"Remote Bytes Read":1048576,"Local Bytes Read":524288},"Shuffle Write Metrics":{"Shuffle Bytes Written":2097152}}}
+{"Event":"SparkListenerStageCompleted","Stage Info":{"Stage ID":1,"Stage Attempt ID":0,"Stage Name":"aggregate by zone","Number of Tasks":2,"Submission Time":1717000004000,"Completion Time":1717000007000}}
+{"Event":"SparkListenerTaskEnd","Stage ID":1,"Stage Attempt ID":0,"Task Type":"ResultTask","Task End Reason":{"Reason":"Success"},"Task Info":{"Task ID":2},"Task Metrics":{"Executor Run Time":1500,"Memory Bytes Spilled":0,"Disk Bytes Spilled":0,"Shuffle Read Metrics":{"Remote Bytes Read":2097152,"Local Bytes Read":0},"Shuffle Write Metrics":{"Shuffle Bytes Written":0}}}
+{"Event":"SparkListenerJobEnd","Job ID":0,"Job Result":{"Result":"JobSucceeded"}}
+{"Event":"SparkListenerApplicationEnd","Timestamp":1717000008000}

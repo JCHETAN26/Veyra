@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from dataforge import __version__
 from dataforge.contracts.health import HealthReport, HealthStatus
 from dataforge.core.config import get_settings
+from dataforge.core.db import dispose_engine
 from dataforge.core.errors import DataForgeError, ErrorResponse
 from dataforge.core.logging import configure_logging, get_logger
 from dataforge.core.middleware import CorrelationMiddleware
@@ -42,6 +43,7 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("app.shutdown.begin")
         for mod in reversed(MODULES):
             await mod.shutdown()
+        await dispose_engine()
         logger.info("app.shutdown.complete")
 
 
