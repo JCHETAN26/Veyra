@@ -18,6 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --python 3.12 --no-dev
 
 COPY src ./src
+COPY README.md ./README.md
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --python 3.12 --no-dev
 
