@@ -62,6 +62,26 @@ class IncidentRepository:
         row = await self._session.get(IncidentRow, incident_id)
         return _to_incident(row) if row is not None else None
 
+    async def set_status_for_run(self, run_id: str, status: IncidentStatus) -> int:
+        """Explicitly set the status of all incidents for a run.
+
+        Separate from upsert (which preserves status across re-detection) so
+        that resolving incidents after a successful remediation is an explicit,
+        intentional action. Returns the number of incidents updated.
+        """
+        stmt = select(IncidentRow).where(IncidentRow.run_id == run_id)
+        rows = (await self._session.execute(stmt)).scalars().all()
+        for row in rows:
+            row.status = status.value
+        await self._session.flush()
+        logger.info(
+            "incident.status_set",
+            run_id=run_id,
+            status=status.value,
+            count=len(rows),
+        )
+        return len(rows)
+
     async def list_for_run(self, run_id: str) -> list[Incident]:
         stmt = (
             select(IncidentRow)
