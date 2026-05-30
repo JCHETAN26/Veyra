@@ -52,7 +52,9 @@ def synthesize_pipeline_history(
     run_id_prefix: str | None = None,
 ) -> list[PipelineRun]:
     """Produce a deterministic synthetic history for one pipeline."""
-    rng = random.Random(f"{seed}:{app_name}:{pattern.value}")  # noqa: S311
+    rng = random.Random(  # noqa: S311  # nosec B311 - synthetic-data generator, not security-sensitive
+        f"{seed}:{app_name}:{pattern.value}"
+    )
     prefix = run_id_prefix or f"synth-{pattern.value}-{app_name}"
 
     runs: list[PipelineRun] = []
