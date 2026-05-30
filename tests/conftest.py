@@ -39,13 +39,25 @@ def client() -> Iterator[TestClient]:
 
 @pytest.fixture
 async def db_session() -> AsyncIterator[object]:
-    """A standalone session with tables created, for repository unit tests."""
-    from dataforge.core.db import Base, get_engine, session_scope
+    """An isolated in-memory session with fresh tables, for repository tests.
+
+    Uses its own engine (not the shared app DB) so repository unit tests that
+    assert exact contents aren't polluted by other tests sharing the file DB.
+    """
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from dataforge.core.db import Base
     from dataforge.modules.metadata import models  # noqa: F401
 
-    engine = get_engine()
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with session_scope() as session:
-        yield session
+    factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+    async with factory() as session:
+        try:
+            yield session
+            await session.commit()
+        finally:
+            await session.close()
+    await engine.dispose()

@@ -153,3 +153,37 @@ class RemediationWorkflowRow(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
+
+
+class DatasetRow(Base):
+    __tablename__ = "datasets"
+
+    name: Mapped[str] = mapped_column(String(512), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(32), default="table")
+    first_seen: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+class LineageEdgeRow(Base):
+    __tablename__ = "lineage_edges"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    upstream: Mapped[str] = mapped_column(String(512), index=True)
+    downstream: Mapped[str] = mapped_column(String(512), index=True)
+    job_name: Mapped[str] = mapped_column(String(512), default="")
+    run_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (
+        # One edge per (upstream, downstream, job) so re-registration is idempotent.
+        Index(
+            "ix_lineage_edge_unique",
+            "upstream",
+            "downstream",
+            "job_name",
+            unique=True,
+        ),
+    )

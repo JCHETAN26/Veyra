@@ -13,6 +13,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from dataforge.contracts.incident import Incident
+from dataforge.contracts.lineage import BlastRadius
 from dataforge.contracts.rca import RootCauseAnalysis
 from dataforge.contracts.remediation_workflow import RemediationWorkflow
 from dataforge.contracts.retrieval import SimilarIncident
@@ -37,3 +38,4 @@ class PipelineReport(BaseModel):
     analysis: RootCauseAnalysis | None = None
     similar_incidents: list[SimilarIncident] = Field(default_factory=list)
     workflow: RemediationWorkflow | None = None
+    blast_radius: BlastRadius | None = None
