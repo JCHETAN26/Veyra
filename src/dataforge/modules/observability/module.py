@@ -20,6 +20,11 @@ class ObservabilityModule:
     def __init__(self) -> None:
         self._service = ObservabilityService()
 
+    @property
+    def service(self) -> ObservabilityService:
+        """Expose the service for in-process composition (the coordinator)."""
+        return self._service
+
     def router(self) -> APIRouter:
         router = APIRouter()
 
