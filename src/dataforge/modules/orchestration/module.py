@@ -11,9 +11,15 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from dataforge.contracts.health import DependencyHealth, HealthStatus
+from dataforge.contracts.pipeline import PipelineReport
 from dataforge.contracts.remediation_workflow import RemediationWorkflow
 from dataforge.core.logging import get_logger
+from dataforge.modules.ingestion import module as ingestion_module
+from dataforge.modules.observability import module as observability_module
+from dataforge.modules.orchestration.coordinator import PipelineCoordinator
 from dataforge.modules.orchestration.service import OrchestrationService
+from dataforge.modules.rag import module as rag_module
+from dataforge.modules.remediation import module as remediation_module
 
 logger = get_logger(__name__)
 
@@ -26,11 +32,30 @@ class RejectRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=1000)
 
 
+class ProcessEventLogRequest(BaseModel):
+    run_id: str = Field(..., min_length=1, max_length=255)
+    content: str = Field(..., description="Raw Spark event-log text (JSON lines).")
+
+
 class OrchestrationModule:
     name = "orchestration"
 
     def __init__(self) -> None:
         self._service = OrchestrationService()
+        # Compose the loop from the other modules' service instances, so the
+        # coordinator shares state (notably the RAG index) with the API paths.
+        self._coordinator = PipelineCoordinator(
+            ingestion=ingestion_module.service,
+            observability=observability_module.service,
+            remediation=remediation_module.service,
+            rag=rag_module.service,
+            orchestration=self._service,
+        )
+
+    @property
+    def service(self) -> OrchestrationService:
+        """Expose the service for in-process composition (the coordinator)."""
+        return self._service
 
     def router(self) -> APIRouter:
         router = APIRouter()
@@ -38,6 +63,24 @@ class OrchestrationModule:
         @router.get("/status", summary="Orchestration module status")
         async def status() -> dict[str, str]:
             return {"module": self.name, "status": "ready"}
+
+        @router.post(
+            "/process/event-log",
+            summary="Run the full self-healing loop over a Spark event log",
+            response_model=PipelineReport,
+        )
+        async def process_event_log(
+            request: ProcessEventLogRequest,
+        ) -> PipelineReport:
+            return await self._coordinator.process_event_log(request.content, run_id=request.run_id)
+
+        @router.post(
+            "/runs/{run_id}/process",
+            summary="Run the full self-healing loop over an ingested run",
+            response_model=PipelineReport,
+        )
+        async def process_run(run_id: str) -> PipelineReport:
+            return await self._coordinator.process_run(run_id)
 
         @router.post(
             "/runs/{run_id}/remediation",

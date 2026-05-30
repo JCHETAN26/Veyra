@@ -23,6 +23,11 @@ class RagModule:
     def __init__(self) -> None:
         self._service = RagService()
 
+    @property
+    def service(self) -> RagService:
+        """Expose the service for in-process composition (the coordinator)."""
+        return self._service
+
     def router(self) -> APIRouter:
         router = APIRouter()
 

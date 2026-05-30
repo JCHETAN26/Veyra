@@ -26,6 +26,11 @@ class IngestionModule:
     def __init__(self) -> None:
         self._service = IngestionService()
 
+    @property
+    def service(self) -> IngestionService:
+        """Expose the service for in-process composition (the coordinator)."""
+        return self._service
+
     def router(self) -> APIRouter:
         router = APIRouter()
 
