@@ -14,6 +14,7 @@ from dataforge.contracts.rca import RootCauseAnalysis
 from dataforge.core.db import session_scope
 from dataforge.core.logging import get_logger
 from dataforge.modules.metadata.rca_repository import RcaRepository
+from dataforge.modules.remediation.rca import LLMAnalyzer, build_analyzer
 from dataforge.modules.remediation.service import RemediationService
 
 logger = get_logger(__name__)
@@ -23,7 +24,10 @@ class RemediationModule:
     name = "remediation"
 
     def __init__(self) -> None:
-        self._service = RemediationService()
+        # Analyzer choice is config-driven: null provider -> rule-based,
+        # anthropic/openai/ollama -> LLMAnalyzer. The RAG service is attached
+        # later in startup() so both modules can be constructed independently.
+        self._service = RemediationService(analyzer=build_analyzer())
 
     @property
     def service(self) -> RemediationService:
@@ -60,6 +64,15 @@ class RemediationModule:
         return router
 
     async def startup(self) -> None:
+        # Late-bind the RAG service into the LLM analyzer so it can fetch
+        # similar past incidents. Done here (rather than at construction) so
+        # we don't depend on rag module's import-time state.
+        analyzer = self._service.analyzer
+        if isinstance(analyzer, LLMAnalyzer):
+            from dataforge.modules.rag import module as rag_module_instance
+
+            analyzer.attach_rag(rag_module_instance.service)
+            logger.info("remediation.llm_analyzer_attached_rag", analyzer=analyzer.name)
         logger.info("module.startup", module=self.name)
 
     async def shutdown(self) -> None:

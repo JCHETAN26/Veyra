@@ -41,7 +41,7 @@ def _incident(anomaly: AnomalyType, severity: Severity = Severity.MEDIUM) -> Inc
     )
 
 
-def test_oom_classified_as_memory_pressure() -> None:
+async def test_oom_classified_as_memory_pressure() -> None:
     run = _run(
         status=RunStatus.FAILED,
         failure=FailureInfo(error_class="java.lang.OutOfMemoryError", message="Java heap space"),
@@ -55,7 +55,7 @@ def test_oom_classified_as_memory_pressure() -> None:
         _incident(AnomalyType.RUN_FAILURE, Severity.CRITICAL),
         _incident(AnomalyType.EXCESSIVE_SPILL),
     ]
-    analysis = RuleBasedAnalyzer().analyze(run, incidents)
+    analysis = await RuleBasedAnalyzer().analyze(run, incidents)
 
     assert analysis.category == CauseCategory.MEMORY_PRESSURE
     assert analysis.confidence >= 0.8
@@ -64,7 +64,7 @@ def test_oom_classified_as_memory_pressure() -> None:
     assert set(analysis.incident_ids) == {i.incident_id for i in incidents}
 
 
-def test_heavy_spill_without_failure_is_skew() -> None:
+async def test_heavy_spill_without_failure_is_skew() -> None:
     run = _run(
         status=RunStatus.SUCCEEDED,
         metrics=RunMetrics(
@@ -73,47 +73,47 @@ def test_heavy_spill_without_failure_is_skew() -> None:
         ),
     )
     incidents = [_incident(AnomalyType.EXCESSIVE_SPILL)]
-    analysis = RuleBasedAnalyzer().analyze(run, incidents)
+    analysis = await RuleBasedAnalyzer().analyze(run, incidents)
     assert analysis.category == CauseCategory.DATA_SKEW
 
 
-def test_flaky_tasks_on_success_is_transient() -> None:
+async def test_flaky_tasks_on_success_is_transient() -> None:
     run = _run(
         status=RunStatus.SUCCEEDED,
         metrics=RunMetrics(num_tasks=100, num_failed_tasks=20),
     )
     incidents = [_incident(AnomalyType.HIGH_FAILED_TASK_RATIO)]
-    analysis = RuleBasedAnalyzer().analyze(run, incidents)
+    analysis = await RuleBasedAnalyzer().analyze(run, incidents)
     assert analysis.category == CauseCategory.TRANSIENT_FAILURE
 
 
-def test_long_duration_is_performance_regression() -> None:
+async def test_long_duration_is_performance_regression() -> None:
     run = _run(status=RunStatus.SUCCEEDED, duration_ms=45 * 60 * 1000)
     incidents = [_incident(AnomalyType.LONG_DURATION)]
-    analysis = RuleBasedAnalyzer().analyze(run, incidents)
+    analysis = await RuleBasedAnalyzer().analyze(run, incidents)
     assert analysis.category == CauseCategory.PERFORMANCE_REGRESSION
 
 
-def test_unmatched_failure_is_unknown_low_confidence() -> None:
+async def test_unmatched_failure_is_unknown_low_confidence() -> None:
     run = _run(
         status=RunStatus.FAILED,
         failure=FailureInfo(message="some unrecognized error"),
     )
     incidents = [_incident(AnomalyType.RUN_FAILURE, Severity.HIGH)]
-    analysis = RuleBasedAnalyzer().analyze(run, incidents)
+    analysis = await RuleBasedAnalyzer().analyze(run, incidents)
     assert analysis.category == CauseCategory.UNKNOWN
     assert analysis.confidence < 0.5
     assert analysis.recommended_actions  # still suggests manual triage
 
 
-def test_clean_run_yields_no_cause() -> None:
+async def test_clean_run_yields_no_cause() -> None:
     run = _run(status=RunStatus.SUCCEEDED, metrics=RunMetrics(num_tasks=10))
-    analysis = RuleBasedAnalyzer().analyze(run, [])
+    analysis = await RuleBasedAnalyzer().analyze(run, [])
     assert analysis.category == CauseCategory.UNKNOWN
     assert analysis.confidence == 0.0
 
 
-def test_oom_takes_precedence_over_spill_rule() -> None:
+async def test_oom_takes_precedence_over_spill_rule() -> None:
     # Both OOM and spill present: most-specific (OOM) rule must win.
     run = _run(
         status=RunStatus.FAILED,
@@ -124,17 +124,17 @@ def test_oom_takes_precedence_over_spill_rule() -> None:
         _incident(AnomalyType.RUN_FAILURE, Severity.CRITICAL),
         _incident(AnomalyType.EXCESSIVE_SPILL),
     ]
-    analysis = RuleBasedAnalyzer().analyze(run, incidents)
+    analysis = await RuleBasedAnalyzer().analyze(run, incidents)
     assert analysis.category == CauseCategory.MEMORY_PRESSURE
 
 
-def test_analyzer_is_deterministic() -> None:
+async def test_analyzer_is_deterministic() -> None:
     run = _run(
         status=RunStatus.FAILED,
         failure=FailureInfo(error_class="java.lang.OutOfMemoryError"),
         metrics=RunMetrics(num_tasks=10, memory_spilled_bytes=512 * 1024 * 1024),
     )
     incidents = [_incident(AnomalyType.EXCESSIVE_SPILL)]
-    a = RuleBasedAnalyzer().analyze(run, incidents)
-    b = RuleBasedAnalyzer().analyze(run, incidents)
+    a = await RuleBasedAnalyzer().analyze(run, incidents)
+    b = await RuleBasedAnalyzer().analyze(run, incidents)
     assert a.model_dump() == b.model_dump()

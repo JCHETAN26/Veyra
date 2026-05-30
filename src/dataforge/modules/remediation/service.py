@@ -30,6 +30,11 @@ class RemediationService:
     def __init__(self, analyzer: RootCauseAnalyzer | None = None) -> None:
         self._analyzer: RootCauseAnalyzer = analyzer or RuleBasedAnalyzer()
 
+    @property
+    def analyzer(self) -> RootCauseAnalyzer:
+        """Expose the analyzer so the module can wire late-bound deps into it."""
+        return self._analyzer
+
     async def analyze_run(self, run_id: str) -> RootCauseAnalysis:
         """Run root-cause analysis for a run and persist the result.
 
@@ -41,7 +46,7 @@ class RemediationService:
                 raise NotFoundError(f"run '{run_id}' not found")
 
             incidents = await IncidentRepository(session).list_for_run(run_id)
-            analysis = self._analyzer.analyze(run, incidents)
+            analysis = await self._analyzer.analyze(run, incidents)
             analysis.created_at = datetime.now(UTC)
 
             await RcaRepository(session).upsert(analysis)
