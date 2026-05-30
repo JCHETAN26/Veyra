@@ -1,11 +1,18 @@
-"""RAG module implementation (skeleton)."""
+"""RAG module implementation.
+
+Exposes operational retrieval: index a run's failure profile and find similar
+past failures. The service (and its in-process index) is held for the module's
+lifetime so the corpus persists across requests within the process.
+"""
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from dataforge.contracts.health import DependencyHealth, HealthStatus
+from dataforge.contracts.retrieval import RetrievalResult
 from dataforge.core.logging import get_logger
+from dataforge.modules.rag.service import RagService
 
 logger = get_logger(__name__)
 
@@ -13,12 +20,37 @@ logger = get_logger(__name__)
 class RagModule:
     name = "rag"
 
+    def __init__(self) -> None:
+        self._service = RagService()
+
     def router(self) -> APIRouter:
         router = APIRouter()
 
         @router.get("/status", summary="RAG module status")
         async def status() -> dict[str, str]:
-            return {"module": self.name, "status": "scaffolded"}
+            return {"module": self.name, "status": "ready"}
+
+        @router.post(
+            "/runs/{run_id}/index",
+            summary="Index a run's failure profile",
+            response_model=RetrievalResult,
+        )
+        async def index(run_id: str) -> RetrievalResult:
+            await self._service.index_run(run_id)
+            # Echo current similar matches as immediate feedback.
+            return await self._service.find_similar(run_id)
+
+        @router.get(
+            "/runs/{run_id}/similar",
+            summary="Find past runs with a similar failure profile",
+            response_model=RetrievalResult,
+        )
+        async def similar(
+            run_id: str,
+            limit: int = Query(default=5, ge=1, le=50),
+            min_score: float = Query(default=0.1, ge=0.0, le=1.0),
+        ) -> RetrievalResult:
+            return await self._service.find_similar(run_id, limit=limit, min_score=min_score)
 
         return router
 
@@ -29,7 +61,6 @@ class RagModule:
         logger.info("module.shutdown", module=self.name)
 
     async def health(self) -> list[DependencyHealth]:
-        # TODO: probe Qdrant collection availability once wired.
         return [DependencyHealth(name="rag", status=HealthStatus.OK)]
 
 
