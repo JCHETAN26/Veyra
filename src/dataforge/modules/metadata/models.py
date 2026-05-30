@@ -129,3 +129,27 @@ class RootCauseAnalysisRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
+
+
+class RemediationWorkflowRow(Base):
+    __tablename__ = "remediation_workflows"
+
+    workflow_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        ForeignKey("pipeline_runs.run_id", ondelete="CASCADE"),
+        index=True,
+        unique=True,
+    )
+    state: Mapped[str] = mapped_column(String(32), index=True)
+    proposal_json: Mapped[str] = mapped_column(Text, default="{}")
+    approver: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    applied_action_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    transitions_json: Mapped[str] = mapped_column(Text, default="[]")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
