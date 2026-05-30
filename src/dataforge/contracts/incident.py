@@ -29,10 +29,16 @@ class Severity(IntEnum):
 
 
 class AnomalyType(StrEnum):
+    # Rule-based detectors.
     RUN_FAILURE = "run_failure"
     EXCESSIVE_SPILL = "excessive_spill"
     HIGH_FAILED_TASK_RATIO = "high_failed_task_ratio"
     LONG_DURATION = "long_duration"
+    # ML-based detectors. Distinct types so consumers can tell which path
+    # produced a finding and reason over confidence accordingly.
+    METRIC_OUTLIER = "metric_outlier"
+    DURATION_OUTLIER = "duration_outlier"
+    NOVEL_FAILURE_PATTERN = "novel_failure_pattern"
 
 
 class IncidentStatus(StrEnum):

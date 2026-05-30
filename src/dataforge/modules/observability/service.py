@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from dataforge.contracts.incident import Finding, Incident, IncidentStatus
+from dataforge.core.config import get_settings
 from dataforge.core.db import session_scope
 from dataforge.core.errors import NotFoundError
 from dataforge.core.logging import get_logger
@@ -22,6 +23,11 @@ from dataforge.modules.metadata.repository import MetadataRepository
 from dataforge.modules.observability.detectors import (
     DetectorThresholds,
     run_detectors,
+)
+from dataforge.modules.observability.ml import (
+    MLDetector,
+    build_ml_detectors,
+    run_ml_detectors,
 )
 
 logger = get_logger(__name__)
@@ -49,21 +55,54 @@ def _finding_to_incident(run_id: str, finding: Finding, detected_at: datetime) -
 class ObservabilityService:
     """Runs anomaly detection over pipeline runs and raises incidents."""
 
-    def __init__(self, thresholds: DetectorThresholds | None = None) -> None:
+    def __init__(
+        self,
+        thresholds: DetectorThresholds | None = None,
+        *,
+        ml_detectors: list[MLDetector] | None = None,
+        history_limit: int | None = None,
+    ) -> None:
         self._thresholds = thresholds or DetectorThresholds()
+        cfg = get_settings()
+        # ML detectors are an injection point. When None (production), build
+        # from settings — disabled by default, so the deterministic path is
+        # unchanged. Tests pass a pre-built list to skip the dep gate.
+        self._ml_detectors: list[MLDetector] = (
+            ml_detectors if ml_detectors is not None else build_ml_detectors(cfg)
+        )
+        self._history_limit = (
+            history_limit if history_limit is not None else cfg.ml_detector_history_limit
+        )
 
     async def evaluate_run(self, run_id: str) -> list[Incident]:
         """Detect anomalies for a run and persist one incident per anomaly.
 
         Idempotent: re-evaluating the same run updates existing incidents
-        rather than duplicating them.
+        rather than duplicating them. When ML detectors are enabled, the
+        recent run history is fetched once and shared across them so the
+        DB cost is a single query regardless of how many detectors run.
         """
         async with session_scope() as session:
-            run = await MetadataRepository(session).get_run(run_id)
+            repo = MetadataRepository(session)
+            run = await repo.get_run(run_id)
             if run is None:
                 raise NotFoundError(f"run '{run_id}' not found")
 
             findings = run_detectors(run, self._thresholds)
+            if self._ml_detectors:
+                history = await repo.list_runs(limit=self._history_limit)
+                # Exclude the run under evaluation so it doesn't bias its own
+                # baseline. The baseline is "everything before this run."
+                history = [h for h in history if h.run_id != run.run_id]
+                findings.extend(
+                    run_ml_detectors(
+                        run,
+                        history,
+                        self._ml_detectors,
+                        thresholds=self._thresholds,
+                    )
+                )
+
             detected_at = datetime.now(UTC)
             incidents = [_finding_to_incident(run_id, f, detected_at) for f in findings]
 
@@ -75,6 +114,7 @@ class ObservabilityService:
             "observability.evaluated",
             run_id=run_id,
             num_incidents=len(incidents),
+            num_ml_detectors=len(self._ml_detectors),
             status=run.status,
         )
         return incidents
