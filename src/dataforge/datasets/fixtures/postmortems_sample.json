@@ -1,0 +1,179 @@
+[
+  {
+    "run_id": "pm-aws-s3-2017-02",
+    "app_name": "aws",
+    "category": "dependency_failure",
+    "summary": "AWS S3 us-east-1 outage from typo during routine playbook; downstream services across the internet went down.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-cloudflare-2019-07",
+    "app_name": "cloudflare",
+    "category": "performance_regression",
+    "summary": "Cloudflare global outage caused by regex with catastrophic backtracking deployed to WAF.",
+    "anomaly_types": ["long_duration", "run_failure"]
+  },
+  {
+    "run_id": "pm-github-2018-10",
+    "app_name": "github",
+    "category": "data_skew",
+    "summary": "GitHub 24-hour degradation from network partition causing MySQL replication topology split.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-gitlab-2017-01",
+    "app_name": "gitlab",
+    "category": "dependency_failure",
+    "summary": "GitLab data loss when sysadmin removed production directory on standby; six hours of work lost.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-stripe-2019-07",
+    "app_name": "stripe",
+    "category": "dependency_failure",
+    "summary": "Stripe API outage from cascading shard failover; downstream merchants saw elevated errors.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-kinesis-2020-11",
+    "app_name": "aws",
+    "category": "memory_pressure",
+    "summary": "AWS Kinesis us-east-1 outage from OS thread limit exhaustion during scale-up event.",
+    "error_class": "OperatingSystemThreadLimitExceeded",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-discord-2020-03",
+    "app_name": "discord",
+    "category": "memory_pressure",
+    "summary": "Discord outage from Cassandra GC pauses under increased load; servers became unresponsive.",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "pm-fastly-2021-06",
+    "app_name": "fastly",
+    "category": "dependency_failure",
+    "summary": "Fastly global CDN outage triggered by single customer's valid config update exposing latent bug.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-akamai-2021-07",
+    "app_name": "akamai",
+    "category": "dependency_failure",
+    "summary": "Akamai DNS outage from software update; financial and airline systems affected.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-facebook-2021-10",
+    "app_name": "facebook",
+    "category": "dependency_failure",
+    "summary": "Facebook 6-hour outage from BGP withdrawal during routine maintenance; backbone DNS unreachable.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-azure-2018-09",
+    "app_name": "microsoft",
+    "category": "dependency_failure",
+    "summary": "Azure South Central US outage from cooling failure during thunderstorm; hardware loss.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-roblox-2021-10",
+    "app_name": "roblox",
+    "category": "dependency_failure",
+    "summary": "Roblox 73-hour outage from Consul performance degradation under sustained high contention.",
+    "anomaly_types": ["long_duration", "run_failure"]
+  },
+  {
+    "run_id": "pm-instapaper-2017-02",
+    "app_name": "instapaper",
+    "category": "memory_pressure",
+    "summary": "Instapaper outage from MySQL table size limit (2 TB) hit on legacy filesystem; couldn't accept writes.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-paypal-2014-06",
+    "app_name": "paypal",
+    "category": "data_skew",
+    "summary": "PayPal global outage from database failover that left inconsistent state across shards.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-tarsnap-2011-07",
+    "app_name": "tarsnap",
+    "category": "performance_regression",
+    "summary": "Tarsnap multi-day outage from disk failure cascading through RAID rebuild process.",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "pm-knightcap-2012-08",
+    "app_name": "knight-capital",
+    "category": "transient_failure",
+    "summary": "Knight Capital $440M loss in 45 minutes from deploying old code to one of eight servers.",
+    "anomaly_types": ["high_failed_task_ratio"]
+  },
+  {
+    "run_id": "pm-cloudflare-2020-07",
+    "app_name": "cloudflare",
+    "category": "dependency_failure",
+    "summary": "Cloudflare outage from BGP route leak on backbone network; ~50% of traffic dropped.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-google-2020-12",
+    "app_name": "google",
+    "category": "dependency_failure",
+    "summary": "Google outage from auth system storage quota issue; Gmail, YouTube, Drive all affected.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-slack-2021-01",
+    "app_name": "slack",
+    "category": "dependency_failure",
+    "summary": "Slack outage tied to AWS Transit Gateway scaling issues at start of post-holiday traffic surge.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-monzo-2019-07",
+    "app_name": "monzo",
+    "category": "data_skew",
+    "summary": "Monzo bank outage from Cassandra cluster split-brain during attempted cluster expansion.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-segment-2018-04",
+    "app_name": "segment",
+    "category": "memory_pressure",
+    "summary": "Segment pipeline backed up after Kafka consumer hit GC death spiral on hot partition.",
+    "error_class": "java.lang.OutOfMemoryError",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "pm-shopify-2019-06",
+    "app_name": "shopify",
+    "category": "data_skew",
+    "summary": "Shopify checkout slowdown during high traffic from MySQL hot shard on flash sale merchant.",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "pm-twitter-2016-01",
+    "app_name": "twitter",
+    "category": "dependency_failure",
+    "summary": "Twitter outage from backend infrastructure rollout; service degraded for ~7 hours.",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "pm-spotify-2022-03",
+    "app_name": "spotify",
+    "category": "performance_regression",
+    "summary": "Spotify slowdown after expired certificate caused failover loops in service mesh.",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "pm-reddit-2023-03",
+    "app_name": "reddit",
+    "category": "memory_pressure",
+    "summary": "Reddit multi-hour outage from Kubernetes upgrade triggering pod evictions across critical pods.",
+    "anomaly_types": ["run_failure"]
+  }
+]
