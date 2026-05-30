@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query
 
+from dataforge.contracts.forecast import FailurePrediction, TrainingResult
 from dataforge.contracts.health import DependencyHealth, HealthStatus
 from dataforge.contracts.incident import Incident
 from dataforge.core.db import session_scope
@@ -59,6 +60,27 @@ class ObservabilityModule:
         async def list_for_run(run_id: str) -> list[Incident]:
             async with session_scope() as session:
                 return await IncidentRepository(session).list_for_run(run_id)
+
+        @router.post(
+            "/forecaster/train",
+            summary="Fit the failure forecaster from recent run history",
+            response_model=TrainingResult,
+        )
+        async def train_forecaster(
+            history_limit: int = Query(default=500, ge=30, le=5000),
+        ) -> TrainingResult:
+            return await self._service.train_forecaster(history_limit=history_limit)
+
+        @router.get(
+            "/forecaster/predict/{app_name}",
+            summary="Predict P(next run of this pipeline fails)",
+            response_model=FailurePrediction,
+        )
+        async def predict_failure(
+            app_name: str,
+            window_limit: int = Query(default=50, ge=2, le=500),
+        ) -> FailurePrediction:
+            return await self._service.predict_failure(app_name, window_limit=window_limit)
 
         return router
 

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from dataforge.contracts.forecast import FailurePrediction, TrainingResult
 from dataforge.contracts.incident import Finding, Incident, IncidentStatus
 from dataforge.core.config import get_settings
 from dataforge.core.db import session_scope
@@ -23,6 +24,10 @@ from dataforge.modules.metadata.repository import MetadataRepository
 from dataforge.modules.observability.detectors import (
     DetectorThresholds,
     run_detectors,
+)
+from dataforge.modules.observability.forecaster import (
+    FailureForecaster,
+    ForecasterError,
 )
 from dataforge.modules.observability.ml import (
     MLDetector,
@@ -61,6 +66,7 @@ class ObservabilityService:
         *,
         ml_detectors: list[MLDetector] | None = None,
         history_limit: int | None = None,
+        forecaster: FailureForecaster | None = None,
     ) -> None:
         self._thresholds = thresholds or DetectorThresholds()
         cfg = get_settings()
@@ -73,6 +79,9 @@ class ObservabilityService:
         self._history_limit = (
             history_limit if history_limit is not None else cfg.ml_detector_history_limit
         )
+        # Forecaster is per-process state, lazily fit. Held here rather than
+        # in a module-level singleton so tests can inject a pre-fit instance.
+        self._forecaster = forecaster or FailureForecaster()
 
     async def evaluate_run(self, run_id: str) -> list[Incident]:
         """Detect anomalies for a run and persist one incident per anomaly.
@@ -118,3 +127,35 @@ class ObservabilityService:
             status=run.status,
         )
         return incidents
+
+    # ------------------------------------------------------------------
+    # Failure forecasting
+    # ------------------------------------------------------------------
+
+    async def train_forecaster(self, *, history_limit: int = 500) -> TrainingResult:
+        """Fit the failure forecaster from recent run history.
+
+        Idempotent: calling repeatedly retrains the model. Returns the
+        per-feature importances for caller introspection.
+        """
+        async with session_scope() as session:
+            history = await MetadataRepository(session).list_runs(limit=history_limit)
+        return self._forecaster.fit(history)
+
+    async def predict_failure(self, app_name: str, *, window_limit: int = 50) -> FailurePrediction:
+        """Predict the probability the next run of `app_name` will fail.
+
+        Loads recent runs of that pipeline (most-recent first) and feeds the
+        chronologically-ordered window into the trained forecaster.
+        """
+        async with session_scope() as session:
+            history = await MetadataRepository(session).list_runs(limit=window_limit)
+        relevant = [r for r in history if r.app_name == app_name]
+        if len(relevant) < 2:
+            raise ForecasterError(
+                f"too few recent runs for pipeline '{app_name}': "
+                f"have {len(relevant)}, need >= 2."
+            )
+        # list_runs returns most-recent first; predict expects oldest first.
+        relevant.reverse()
+        return self._forecaster.predict(relevant)
