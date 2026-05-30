@@ -6,10 +6,16 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import text
 
 from dataforge.contracts.health import DependencyHealth, HealthStatus
+from dataforge.contracts.lineage import (
+    BlastRadius,
+    JobLineage,
+    LineageNeighbors,
+)
 from dataforge.contracts.telemetry import PipelineRun
 from dataforge.core.db import Base, get_engine, session_scope
 from dataforge.core.logging import get_logger
 from dataforge.modules.metadata import models  # noqa: F401 - register ORM tables
+from dataforge.modules.metadata.lineage_repository import LineageRepository
 from dataforge.modules.metadata.repository import MetadataRepository
 
 logger = get_logger(__name__)
@@ -47,6 +53,36 @@ class MetadataModule:
             if run is None:
                 raise HTTPException(status_code=404, detail="run not found")
             return run
+
+        @router.post(
+            "/lineage",
+            summary="Register declared job lineage (inputs feed outputs)",
+        )
+        async def register_lineage(lineage: JobLineage) -> dict[str, int]:
+            async with session_scope() as session:
+                edges = await LineageRepository(session).register_job_lineage(lineage)
+            return {"edges": edges}
+
+        @router.get(
+            "/lineage/{dataset}/neighbors",
+            summary="Get direct upstream or downstream neighbours of a dataset",
+            response_model=LineageNeighbors,
+        )
+        async def lineage_neighbors(
+            dataset: str,
+            direction: str = Query(default="downstream", pattern="^(upstream|downstream)$"),
+        ) -> LineageNeighbors:
+            async with session_scope() as session:
+                return await LineageRepository(session).neighbors(dataset, direction=direction)
+
+        @router.get(
+            "/lineage/{dataset}/blast-radius",
+            summary="Compute all datasets downstream of a dataset",
+            response_model=BlastRadius,
+        )
+        async def lineage_blast_radius(dataset: str) -> BlastRadius:
+            async with session_scope() as session:
+                return await LineageRepository(session).blast_radius([dataset])
 
         return router
 
