@@ -42,13 +42,32 @@ streaming = [
     "aiokafka>=0.12.0",
 ]
 ml = [
+    # Unsupervised tabular anomaly detection on run metrics.
+    "scikit-learn>=1.5.0",
+    # Log-template mining for "have we seen this error pattern before".
+    "drain3>=0.9.11",
+]
+# mlflow lives in its own extra because drain3's pinned cachetools==4.2.1
+# conflicts with mlflow's cachetools>=5.0.0. Use --extra tracking when you
+# want experiment tracking (task #12); --extra ml for the detectors.
+tracking = [
     "mlflow>=2.17.0",
+]
+llm = [
+    "anthropic>=0.39.0",
+    "openai>=1.51.0",
+]
+embedder = [
+    # ONNX-runtime text embedder; ~50MB install, no torch dep. Ships bge-small
+    # natively. Lazy-downloads the model file on first embed.
+    "fastembed>=0.3.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
     "aiosqlite>=0.20.0",
     "ruff>=0.7.0",
     "black>=24.10.0",
@@ -59,6 +78,20 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# ----------------------------------------------------------------------------
+# uv: declare extras that can't be installed in the same environment.
+# `ml` pulls drain3 which pins cachetools==4.2.1; `tracking` pulls mlflow
+# which requires cachetools>=5. Marking them as conflicting tells uv to
+# resolve them into separate parts of the lockfile rather than failing.
+# ----------------------------------------------------------------------------
+[tool.uv]
+conflicts = [
+    [
+        { extra = "ml" },
+        { extra = "tracking" },
+    ],
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dataforge"]
@@ -95,10 +128,42 @@ namespace_packages = true
 module = ["prometheus_fastapi_instrumentator.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["anthropic.*", "openai.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["fastembed.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "drain3.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src/dataforge"]
+branch = true
+omit = [
+    # Excluded: trivial entry points and config glue with no logic to test.
+    "src/dataforge/main.py",
+    "src/dataforge/simulator/__main__.py",
+]
+
+[tool.coverage.report]
+precision = 1
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
 
 [tool.bandit]
 exclude_dirs = ["tests"]

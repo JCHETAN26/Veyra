@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 PY := uv run --python 3.12
 
-.PHONY: help setup lint format typecheck test check run-local up down build
+.PHONY: help setup lint format typecheck test coverage check run-local up down build demo demo-list datasets seed-corpus
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -24,6 +24,9 @@ typecheck: ## Type-check with mypy (strict)
 test: ## Run unit tests
 	$(PY) pytest -q
 
+coverage: ## Run tests with coverage gating (matches CI)
+	$(PY) pytest -q --cov --cov-report=term-missing --cov-fail-under=70
+
 check: lint typecheck test ## Run the full local gate
 
 run-local: ## Run the API with autoreload
@@ -37,3 +40,16 @@ down: ## Stop the local stack
 
 build: ## Build the app image
 	docker build -t dataforge:local .
+
+demo: ## Drive the self-healing loop against a running API (BASE_URL=...)
+	scripts/demo_self_heal.sh
+
+demo-list: ## List available chaos scenarios
+	$(PY) python -m dataforge.simulator --list
+
+datasets: ## List shipped public-dataset loaders
+	$(PY) python -m dataforge.datasets list
+
+seed-corpus: ## Seed the running RAG corpus with all shipped datasets (BASE_URL=...)
+	$(PY) python -m dataforge.datasets ingest --dataset postmortems --base-url $${BASE_URL:-http://localhost:8000}
+	$(PY) python -m dataforge.datasets ingest --dataset loghub_spark --base-url $${BASE_URL:-http://localhost:8000}
