@@ -1,0 +1,6 @@
+{"Event":"SparkListenerApplicationStart","App Name":"payments_rollup","App ID":"app-20260529-0003","Timestamp":1717200000000,"User":"dataforge"}
+{"Event":"SparkListenerJobStart","Job ID":0,"Submission Time":1717200001000}
+{"Event":"SparkListenerStageCompleted","Stage Info":{"Stage ID":0,"Stage Attempt ID":0,"Stage Name":"aggregate payments","Number of Tasks":4,"Submission Time":1717200001000,"Completion Time":1717200005000}}
+{"Event":"SparkListenerTaskEnd","Stage ID":0,"Stage Attempt ID":0,"Task Type":"ShuffleMapTask","Task End Reason":{"Reason":"ExceptionFailure","Class Name":"java.lang.OutOfMemoryError","Description":"GC overhead limit exceeded","Stack Trace":[{"Declaring Class":"org.apache.spark.sql.execution.aggregate.HashAggregateExec","Method Name":"doExecute","File Name":"HashAggregateExec.scala","Line Number":98}]},"Task Info":{"Task ID":0},"Task Metrics":{"Executor Run Time":5000,"Memory Bytes Spilled":402653184,"Disk Bytes Spilled":805306368,"Shuffle Read Metrics":{"Remote Bytes Read":1073741824,"Local Bytes Read":0},"Shuffle Write Metrics":{"Shuffle Bytes Written":0}}}
+{"Event":"SparkListenerJobEnd","Job ID":0,"Job Result":{"Result":"JobFailed","Exception":{"Message":"Job aborted due to stage failure: OutOfMemoryError: GC overhead limit exceeded"}}}
+{"Event":"SparkListenerApplicationEnd","Timestamp":1717200007000}
