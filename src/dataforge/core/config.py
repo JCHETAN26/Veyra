@@ -119,6 +119,14 @@ class Settings(BaseSettings):
     # How many recent runs the service fetches as ML context.
     ml_detector_history_limit: int = Field(default=100, ge=10)
 
+    # --- GitHub remediation pipeline -------------------------------------
+    # Token is read here but only used by the pipeline when it actually
+    # opens a PR or pushes a branch. Dry-run mode bypasses both.
+    github_token: str | None = None
+    github_api_url: str = "https://api.github.com"
+    git_user_name: str = "DataForge Bot"
+    git_user_email: str = "bot@dataforge.ai"
+
     @property
     def is_local(self) -> bool:
         return self.environment == Environment.LOCAL
