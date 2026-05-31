@@ -142,7 +142,13 @@ class _RunAccumulator:
             key = (stage_id, attempt_id)
             if stage_id is not None and key in self.stages:
                 self.stages[key].num_failed_tasks += 1
-            self._capture_task_failure(end_reason, stage_id, event.get("Task Info"))
+            # Only ExceptionFailure carries a real fatal exception. Transient
+            # reasons (FetchFailed, TaskKilled, Resubmitted, ExecutorLostFailure)
+            # bump the failed-task counter but don't kill the run — Spark
+            # retries them. job_end -> JobFailed still drives status=FAILED
+            # if the retries exhaust.
+            if reason == "ExceptionFailure":
+                self._capture_task_failure(end_reason, stage_id, event.get("Task Info"))
 
     def _capture_task_failure(
         self,

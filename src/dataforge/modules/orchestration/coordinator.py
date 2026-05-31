@@ -90,7 +90,7 @@ class PipelineCoordinator:
         #    ConflictError when there's nothing auto-applicable; that's a valid
         #    no-actionable-fix outcome, not an error.
         try:
-            workflow = await self._orchestration.propose(run_id)
+            workflow = await self._orchestration.propose(run_id, similar=retrieval.results)
             outcome = PipelineOutcome.NEEDS_APPROVAL
         except ConflictError:
             workflow = None

@@ -1,9 +1,13 @@
 """The RootCauseAnalyzer interface.
 
 Any analyzer (rule-based, LLM-backed) takes a run plus the incidents raised
-for it and returns a structured RootCauseAnalysis. Pure analysis: no I/O, no
-persistence — the service handles loading and saving so analyzers stay
-unit-testable and (for the rule-based one) deterministic.
+for it and returns a structured RootCauseAnalysis. Pure analysis: no I/O
+to the metadata store, no persistence — the service handles loading and
+saving so analyzers stay unit-testable.
+
+The interface is async because the LLM-backed implementation calls a
+remote API. The rule-based implementation is CPU-only and simply doesn't
+yield, which is idiomatic for an async method that wraps sync work.
 """
 
 from __future__ import annotations
@@ -21,6 +25,6 @@ class RootCauseAnalyzer(Protocol):
 
     name: str
 
-    def analyze(self, run: PipelineRun, incidents: list[Incident]) -> RootCauseAnalysis:
+    async def analyze(self, run: PipelineRun, incidents: list[Incident]) -> RootCauseAnalysis:
         """Return a structured explanation of why the run failed/anomalous."""
         ...

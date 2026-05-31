@@ -1,0 +1,214 @@
+[
+  {
+    "run_id": "loghub-spark-0001",
+    "app_name": "spark-executor",
+    "category": "memory_pressure",
+    "summary": "ERROR org.apache.spark.executor.Executor: Exception in task 4.0 in stage 17.3 (TID 42) java.lang.OutOfMemoryError: Java heap space",
+    "error_class": "java.lang.OutOfMemoryError",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0002",
+    "app_name": "spark-executor",
+    "category": "memory_pressure",
+    "summary": "ERROR org.apache.spark.executor.Executor: Managed memory leak detected; size = 268435456 bytes, TID = 1273",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0003",
+    "app_name": "spark-scheduler",
+    "category": "data_skew",
+    "summary": "WARN org.apache.spark.scheduler.TaskSetManager: Stage 12 contains a task of very large size (8492 KB) far exceeding the recommended maximum",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0004",
+    "app_name": "spark-shuffle",
+    "category": "data_skew",
+    "summary": "INFO org.apache.spark.shuffle.sort.ShuffleExternalSorter: Thread 73 spilling sort data of 1024.0 MB to disk (3 times so far)",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0005",
+    "app_name": "spark-executor",
+    "category": "transient_failure",
+    "summary": "ERROR org.apache.spark.executor.CoarseGrainedExecutorBackend: RECEIVED SIGNAL TERM; executor lost from node manager",
+    "anomaly_types": ["high_failed_task_ratio"]
+  },
+  {
+    "run_id": "loghub-spark-0006",
+    "app_name": "spark-shuffle",
+    "category": "transient_failure",
+    "summary": "ERROR org.apache.spark.shuffle.FetchFailedException: Failed to connect to executor-7 / 10.0.4.18:36475; retrying",
+    "error_class": "org.apache.spark.shuffle.FetchFailedException",
+    "anomaly_types": ["high_failed_task_ratio"]
+  },
+  {
+    "run_id": "loghub-spark-0007",
+    "app_name": "spark-scheduler",
+    "category": "transient_failure",
+    "summary": "WARN org.apache.spark.scheduler.TaskSchedulerImpl: Lost task 0.1 in stage 4.0 (TID 88) on executor 2: ExecutorLostFailure (executor 2 exited unrelated to running tasks) Reason: container marked as failed",
+    "anomaly_types": ["high_failed_task_ratio"]
+  },
+  {
+    "run_id": "loghub-spark-0008",
+    "app_name": "spark-driver",
+    "category": "performance_regression",
+    "summary": "INFO org.apache.spark.sql.execution.WholeStageCodegenExec: Stage 9 took 1820045 ms (30 min 20 s) to complete; far above historical median",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "loghub-spark-0009",
+    "app_name": "spark-sql",
+    "category": "dependency_failure",
+    "summary": "ERROR org.apache.spark.sql.execution.streaming.MicroBatchExecution: Query terminated with error java.io.IOException: org.apache.hadoop.fs.s3a.S3AException: read timeout",
+    "error_class": "org.apache.hadoop.fs.s3a.S3AException",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0010",
+    "app_name": "spark-sql",
+    "category": "dependency_failure",
+    "summary": "ERROR org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils: connection refused to jdbc:postgresql://reporting-db:5432/reporting after 3 retries",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0011",
+    "app_name": "spark-sql",
+    "category": "dependency_failure",
+    "summary": "ERROR org.apache.spark.sql.catalyst.expressions.Cast: java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Long at column user_id",
+    "error_class": "java.lang.ClassCastException",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0012",
+    "app_name": "spark-shuffle",
+    "category": "memory_pressure",
+    "summary": "ERROR org.apache.spark.shuffle.sort.UnsafeShuffleWriter: ShuffleMapTask aborted: java.lang.OutOfMemoryError: Unable to acquire 16777216 bytes",
+    "error_class": "java.lang.OutOfMemoryError",
+    "anomaly_types": ["run_failure", "excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0013",
+    "app_name": "spark-executor",
+    "category": "memory_pressure",
+    "summary": "WARN org.apache.spark.memory.MemoryManager: not enough memory for cache, will use disk; total available = 256 MB requested = 1.2 GB",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0014",
+    "app_name": "spark-driver",
+    "category": "performance_regression",
+    "summary": "WARN org.apache.spark.scheduler.DAGScheduler: Broadcasting large task binary with size 18.4 MB; consider reducing closure size",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "loghub-spark-0015",
+    "app_name": "spark-shuffle",
+    "category": "data_skew",
+    "summary": "WARN org.apache.spark.shuffle.sort.SortShuffleManager: partition 0 has 18.4 GB of records, 437x average; possible skew",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0016",
+    "app_name": "spark-executor",
+    "category": "transient_failure",
+    "summary": "WARN org.apache.spark.network.netty.NettyBlockTransferService: failed to connect to BlockManagerId(7, 10.0.4.22, 32887); retrying",
+    "anomaly_types": ["high_failed_task_ratio"]
+  },
+  {
+    "run_id": "loghub-spark-0017",
+    "app_name": "spark-sql",
+    "category": "dependency_failure",
+    "summary": "ERROR delta.exceptions.ConcurrentAppendException: Files were added to partition [date=2026-05-30] by a concurrent update; please retry",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0018",
+    "app_name": "spark-driver",
+    "category": "dependency_failure",
+    "summary": "ERROR org.apache.spark.SparkContext: failed to register with cluster manager: connection timed out after 60 seconds",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0019",
+    "app_name": "spark-executor",
+    "category": "memory_pressure",
+    "summary": "WARN org.apache.spark.executor.Executor: 1 block(s) marked as failed (total size 642 MB); insufficient memory to store",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0020",
+    "app_name": "spark-shuffle",
+    "category": "data_skew",
+    "summary": "INFO org.apache.spark.sql.execution.adaptive.OptimizeSkewedJoin: detected skewed partition 0 in stage 4 (2.1 GB vs median 12 MB)",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0021",
+    "app_name": "spark-driver",
+    "category": null,
+    "summary": "INFO org.apache.spark.deploy.SparkSubmit: Application complete; main thread exiting cleanly"
+  },
+  {
+    "run_id": "loghub-spark-0022",
+    "app_name": "spark-scheduler",
+    "category": null,
+    "summary": "INFO org.apache.spark.scheduler.DAGScheduler: Job 12 finished: count at App.scala:84, took 4.231 s"
+  },
+  {
+    "run_id": "loghub-spark-0023",
+    "app_name": "spark-shuffle",
+    "category": null,
+    "summary": "INFO org.apache.spark.shuffle.sort.BypassMergeSortShuffleWriter: opening 200 partition writers"
+  },
+  {
+    "run_id": "loghub-spark-0024",
+    "app_name": "spark-driver",
+    "category": "performance_regression",
+    "summary": "WARN org.apache.spark.sql.execution.streaming.StreamExecution: streaming query lag is 18 minutes behind ingest; downstream SLA at risk",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "loghub-spark-0025",
+    "app_name": "spark-sql",
+    "category": "dependency_failure",
+    "summary": "ERROR delta.exceptions.MetadataChangedException: schema changed: column item_count nullable -> non-nullable in concurrent commit",
+    "anomaly_types": ["run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0026",
+    "app_name": "spark-executor",
+    "category": "transient_failure",
+    "summary": "WARN org.apache.spark.executor.Executor: TID 4221 killed by external signal (likely YARN preemption); will be retried",
+    "anomaly_types": ["high_failed_task_ratio"]
+  },
+  {
+    "run_id": "loghub-spark-0027",
+    "app_name": "spark-shuffle",
+    "category": "memory_pressure",
+    "summary": "ERROR org.apache.spark.shuffle.IndexShuffleBlockResolver: writing shuffle index file failed: java.io.IOException: No space left on device",
+    "error_class": "java.io.IOException",
+    "anomaly_types": ["excessive_spill", "run_failure"]
+  },
+  {
+    "run_id": "loghub-spark-0028",
+    "app_name": "spark-sql",
+    "category": "data_skew",
+    "summary": "WARN org.apache.spark.sql.execution.joins.SortMergeJoinExec: build side has skewed key 'US-CA' with 18.2 M rows, 230x average partition",
+    "anomaly_types": ["excessive_spill"]
+  },
+  {
+    "run_id": "loghub-spark-0029",
+    "app_name": "spark-driver",
+    "category": "performance_regression",
+    "summary": "WARN org.apache.spark.scheduler.TaskSetManager: task 7.0 in stage 11 (TID 982) has been running for 1182 seconds; possible straggler",
+    "anomaly_types": ["long_duration"]
+  },
+  {
+    "run_id": "loghub-spark-0030",
+    "app_name": "spark-executor",
+    "category": null,
+    "summary": "INFO org.apache.spark.executor.Executor: Finished task 12.0 in stage 4.0 (TID 102); 23 ms"
+  }
+]

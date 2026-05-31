@@ -15,13 +15,11 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dataforge.contracts.incident import IncidentStatus
-from dataforge.contracts.rca import RootCauseAnalysis
 from dataforge.contracts.remediation_workflow import (
-    FixAction,
-    FixProposal,
     RemediationWorkflow,
     WorkflowState,
 )
+from dataforge.contracts.retrieval import SimilarIncident
 from dataforge.core.db import session_scope
 from dataforge.core.errors import ConflictError, NotFoundError
 from dataforge.core.logging import get_logger
@@ -34,6 +32,10 @@ from dataforge.modules.orchestration.executor import (
     SimulatedExecutor,
 )
 from dataforge.modules.orchestration.workflow import transition
+from dataforge.modules.remediation.fixes import (
+    FixGenerator,
+    RuleBasedFixGenerator,
+)
 
 logger = get_logger(__name__)
 
@@ -41,10 +43,25 @@ logger = get_logger(__name__)
 class OrchestrationService:
     """Drives approval-gated, fallback-aware remediation workflows."""
 
-    def __init__(self, executor: RerunExecutor | None = None) -> None:
+    def __init__(
+        self,
+        executor: RerunExecutor | None = None,
+        fix_generator: FixGenerator | None = None,
+    ) -> None:
         self._executor: RerunExecutor = executor or SimulatedExecutor()
+        self._fix_generator: FixGenerator = fix_generator or RuleBasedFixGenerator()
 
-    async def propose(self, run_id: str) -> RemediationWorkflow:
+    @property
+    def fix_generator(self) -> FixGenerator:
+        """Expose the generator so the module can late-bind LLM deps into it."""
+        return self._fix_generator
+
+    async def propose(
+        self,
+        run_id: str,
+        *,
+        similar: list[SimilarIncident] | None = None,
+    ) -> RemediationWorkflow:
         """Create a remediation workflow (PENDING_APPROVAL) from a run's RCA.
 
         Idempotent: re-proposing returns the existing workflow rather than
@@ -64,7 +81,7 @@ class OrchestrationService:
             if analysis is None:
                 raise ConflictError(f"run '{run_id}' has no root-cause analysis; analyze first")
 
-            proposal = _proposal_from_analysis(run_id, analysis)
+            proposal = await self._fix_generator.generate(run, analysis, similar=similar)
             if not proposal.actions:
                 raise ConflictError(f"run '{run_id}' has no actionable fix to propose")
 
@@ -175,17 +192,3 @@ class OrchestrationService:
     async def _resolve_incidents(self, session: AsyncSession, run_id: str) -> None:
         """Mark the run's incidents resolved once a fix succeeds."""
         await IncidentRepository(session).set_status_for_run(run_id, IncidentStatus.RESOLVED)
-
-
-def _proposal_from_analysis(run_id: str, analysis: RootCauseAnalysis) -> FixProposal:
-    actions = [
-        FixAction(title=a.title, detail=a.detail, kind=a.kind)
-        for a in analysis.recommended_actions
-        if a.kind != "manual"
-    ]
-    return FixProposal(
-        run_id=run_id,
-        cause_category=analysis.category.value,
-        confidence=analysis.confidence,
-        actions=actions,
-    )

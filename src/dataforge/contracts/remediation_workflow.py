@@ -44,11 +44,29 @@ class WorkflowState(StrEnum):
 
 
 class FixAction(BaseModel):
-    """One candidate fix the workflow can apply, derived from an RCA action."""
+    """One candidate fix the workflow can apply, derived from an RCA action.
+
+    The optional fields are populated by the LLM-backed fix generator; the
+    rule-based generator leaves them empty for backward compatibility. The
+    workflow and executor read `kind` + `title` for behavior and surface the
+    richer fields to humans during the approval step.
+    """
 
     title: str
     detail: str = ""
     kind: str = "spark_conf"  # spark_conf | code_change | rerun
+
+    # Concrete parameters for a config-style fix, e.g.
+    # {"spark.sql.shuffle.partitions": "400",
+    #  "spark.sql.autoBroadcastJoinThreshold": "104857600"}.
+    parameters: dict[str, str] = Field(default_factory=dict)
+    # Per-action confidence (0-1). Distinct from the overall RCA confidence —
+    # the analysis can be high-confidence while individual fixes are speculative.
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    # How to undo this fix if the rerun fails or regresses.
+    rollback: str = ""
+    # One-line expected effect ("reduce shuffle bytes by ~40%").
+    estimated_impact: str = ""
 
 
 class FixProposal(BaseModel):

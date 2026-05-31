@@ -78,6 +78,46 @@ def build_profile(
     )
 
 
+def build_profile_from_fields(
+    *,
+    run_id: str,
+    app_name: str = "",
+    category: str | None = None,
+    summary: str = "",
+    severity: str | None = None,
+    anomaly_types: list[str] | None = None,
+    error_class: str | None = None,
+    occurred_at: datetime | None = None,
+    status: str = "unknown",
+) -> FailureProfile:
+    """Build a FailureProfile directly from pre-extracted fields.
+
+    Used by external-dataset loaders (postmortems, Loghub samples, ...) that
+    don't have a synthetic PipelineRun to back the profile. Token weighting
+    is identical to `build_profile`, so a profile assembled here ranks
+    consistently against profiles assembled from real runs.
+    """
+    anomalies = anomaly_types or []
+    tokens = _build_tokens(
+        app_name=app_name,
+        error_class=error_class,
+        category=category,
+        anomaly_types=anomalies,
+        status=status,
+    )
+    return FailureProfile(
+        run_id=run_id,
+        app_name=app_name,
+        category=category,
+        summary=summary,
+        severity=severity,
+        anomaly_types=anomalies,
+        error_class=error_class,
+        occurred_at=occurred_at,
+        tokens=tokens,
+    )
+
+
 def _build_tokens(
     *,
     app_name: str,

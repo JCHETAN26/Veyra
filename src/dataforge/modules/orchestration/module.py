@@ -20,6 +20,7 @@ from dataforge.modules.orchestration.coordinator import PipelineCoordinator
 from dataforge.modules.orchestration.service import OrchestrationService
 from dataforge.modules.rag import module as rag_module
 from dataforge.modules.remediation import module as remediation_module
+from dataforge.modules.remediation.fixes import build_fix_generator
 
 logger = get_logger(__name__)
 
@@ -41,7 +42,9 @@ class OrchestrationModule:
     name = "orchestration"
 
     def __init__(self) -> None:
-        self._service = OrchestrationService()
+        # Fix generator is config-driven (null -> rule-based, anthropic/openai
+        # /ollama -> LLM-backed with deterministic fallback).
+        self._service = OrchestrationService(fix_generator=build_fix_generator())
         # Compose the loop from the other modules' service instances, so the
         # coordinator shares state (notably the RAG index) with the API paths.
         self._coordinator = PipelineCoordinator(

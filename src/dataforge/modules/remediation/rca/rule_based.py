@@ -213,7 +213,7 @@ class RuleBasedAnalyzer:
 
     name = "rule-based-v1"
 
-    def analyze(self, run: PipelineRun, incidents: list[Incident]) -> RootCauseAnalysis:
+    async def analyze(self, run: PipelineRun, incidents: list[Incident]) -> RootCauseAnalysis:
         sig = _Signature(run, incidents)
         incident_ids = [i.incident_id for i in incidents]
 

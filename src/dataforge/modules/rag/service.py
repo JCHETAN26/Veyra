@@ -43,11 +43,21 @@ class RagService:
     async def index_run(self, run_id: str) -> FailureProfile:
         """Build and index the failure profile for a run."""
         profile = await self._load_profile(run_id)
+        return await self.index_profile(profile)
+
+    async def index_profile(self, profile: FailureProfile) -> FailureProfile:
+        """Index a pre-built profile directly into the vector store.
+
+        Used by dataset loaders that produce profiles from external corpora
+        (postmortems, Loghub samples, ...) — those records have no real
+        PipelineRun in the metadata store, so the regular index_run path
+        doesn't apply.
+        """
         vector = self._embedder.embed(profile)
         await self._store.upsert(StoredProfile(profile=profile, vector=vector))
         logger.info(
             "rag.indexed",
-            run_id=run_id,
+            run_id=profile.run_id,
             category=profile.category,
             embedder=self._embedder.name,
         )

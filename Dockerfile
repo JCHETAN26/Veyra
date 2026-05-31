@@ -11,16 +11,26 @@ ENV UV_COMPILE_BYTECODE=1 \
 
 WORKDIR /app
 
+# Build-time extras: the runtime modules require these to boot.
+#   storage      sqlalchemy + asyncpg + alembic + qdrant + redis (mandatory)
+#   ml           scikit-learn + drain3 (ML detectors; optional behaviorally
+#                but cheap to ship for the default container)
+#   llm          anthropic + openai SDKs (used when LLM_PROVIDER != null)
+#   embedder     fastembed (used when RAG_EMBEDDER=semantic)
+# Heavy/specialized extras (data, streaming, orchestration, tracking) are
+# left out — opt-in builds layer them on.
+ARG INSTALL_EXTRAS="--extra storage --extra ml --extra llm --extra embedder"
+
 # Install dependencies first (cached layer), then the project.
 COPY pyproject.toml uv.lock* ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --python 3.12 --no-install-project --no-dev || \
-    uv sync --python 3.12 --no-dev
+    uv sync --python 3.12 --no-install-project --no-dev $INSTALL_EXTRAS || \
+    uv sync --python 3.12 --no-dev $INSTALL_EXTRAS
 
 COPY src ./src
 COPY README.md ./README.md
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --python 3.12 --no-dev
+    uv sync --python 3.12 --no-dev $INSTALL_EXTRAS
 
 # --- runtime: slim image with just the venv + source ----------------------
 FROM python:3.12-slim AS runtime
