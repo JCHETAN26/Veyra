@@ -24,7 +24,9 @@ jobs:
   # build or the security scan.
   # ---------------------------------------------------------------------------
   backend:
-    name: Lint, type-check, unit tests
+    # NB: name must match the required status check in
+    # infra/github/branch-protection.json. Keep it stable.
+    name: Backend validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +127,9 @@ jobs:
   # catches Dockerfile regressions that unit tests can't.
   # ---------------------------------------------------------------------------
   container:
-    name: Container build, scan, smoke test
+    # NB: name must match the required status check in
+    # infra/github/branch-protection.json. Keep it stable.
+    name: Container build
     runs-on: ubuntu-latest
     needs: backend
     steps:
